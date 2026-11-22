@@ -44,6 +44,13 @@ PAUSING = (",", ".", "?", "!", ";", ":", "—", "…")
 # Every inventory phone is a label of the recogniser (checked when it loads);
 # only the unknown-phone token needs a stand-in.
 ALIGNER_LABEL_FALLBACK = {UNK: "<unk>"}
+PT_LABEL_SETS = {
+    "ẽ": ("e", "eɪ"), "ĩ": ("i",), "õ": ("o", "u"), "ũ": ("u", "ʊ"), "ɐ̃": ("a", "ɐ"),
+    "ɨ": ("i", "ə", "e"), "ʁ": ("x", "r"), "j": ("i",), "ɐ̃ʊ̃": ("a", "aʊ"), "ɛ": ("e",),
+    "ɐ": ("a", "e"), "w": ("u", "o"), "u": ("ʊ", "o", "uː"), "ɔ": ("o", "oː"), "o": ("oː", "ɔ", "u"),
+    "e": ("i", "ɛ"), "ʎ": ("l",), "ɲ": ("ŋ", "nʲ"), "ʃ": ("s",), "ɾ": ("r", "ɹ", "rʲ"),
+    "ʒ": ("z", "ʃ"), "i": ("iː", "ɪ"), "a": ("aː",), "z": ("s", "ʃ"),
+}
 
 
 @dataclass(frozen=True)
@@ -265,7 +272,19 @@ class PhoneRecognizer:
         self.blank = int(self.model.config.pad_token_id)
         self.name = name
         self.revision = vocabulary.parent.name   # snapshot directory = commit hash
-        missing = [p for p in sorted(PHONE_SET) if p not in self.vocabulary and p not in ALIGNER_LABEL_FALLBACK]
+        # Português (18 Nov 2026): cada fonema aceita qualquer das etiquetas que o reconhecedor,
+        # treinado sobretudo com vozes do Brasil, usa para esse som (medido som a som no lote de
+        # teste, scripts/diagnostico.py do projecto). Cada conjunto é uma coluna nova, a soma das
+        # probabilidades das suas etiquetas; os tokens do modelo não mudam.
+        self.sets, self.set_columns = {}, []
+        if __import__("os").environ.get("TINY_VOCA_FRONTEND") == "pt":
+            import unicodedata
+            forms = lambda l: {f for f in (l, unicodedata.normalize("NFC", l), unicodedata.normalize("NFD", l)) if f in self.vocabulary}
+            for phone, labels in PT_LABEL_SETS.items():
+                ids = sorted({self.vocabulary[f] for l in (phone,) + labels for f in forms(l)})
+                self.sets[phone] = len(self.vocabulary) + len(self.set_columns)
+                self.set_columns.append(ids)
+        missing = [p for p in sorted(PHONE_SET) if p not in self.vocabulary and p not in ALIGNER_LABEL_FALLBACK and p not in self.sets]
         if missing:
             raise ValueError(f"recogniser has no label for inventory phones {missing}")
 
@@ -273,8 +292,8 @@ class PhoneRecognizer:
         # Português (18 Nov 2026): o reconhecedor, treinado sobretudo com vozes do Brasil, não
         # emite ɨ nem ɾ; para alinhar, procura-se o som mais próximo que ele emite. Os tokens do
         # modelo não mudam.
-        if __import__("os").environ.get("TINY_VOCA_FRONTEND") == "pt":
-            symbol = {"ɨ": "e", "ɾ": "r"}.get(symbol, symbol)
+        if symbol in self.sets:
+            return self.sets[symbol]
         symbol = symbol if symbol in self.vocabulary else ALIGNER_LABEL_FALLBACK[symbol]
         return int(self.vocabulary[symbol])
 
@@ -286,7 +305,11 @@ class PhoneRecognizer:
         audio = (audio - audio.mean()) / np.sqrt(audio.var() + 1e-7)
         with torch.inference_mode():
             values = torch.from_numpy(audio.astype(np.float32))[None].to(self.device, self.model.dtype)
-            return self.model(values).logits[0].float().log_softmax(-1).cpu().numpy()
+            log_probs = self.model(values).logits[0].float().log_softmax(-1).cpu().numpy()
+        if self.set_columns:
+            extra = [np.logaddexp.reduce(log_probs[:, ids], axis=1) for ids in self.set_columns]
+            log_probs = np.concatenate([log_probs, np.stack(extra, axis=1)], axis=1)
+        return log_probs
 
 
 def align_utterance(recognizer, phonemized, wave, voiced, config, settings):
