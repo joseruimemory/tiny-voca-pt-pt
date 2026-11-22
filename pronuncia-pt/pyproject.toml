@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pronuncia-pt"
+version = "0.2.0"
+description = "Texto em português europeu para fonemas (símbolos do eSpeak NG), só com regras e excepções"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+
+[tool.setuptools]
+packages = ["pronuncia_pt"]
+
+[tool.setuptools.package-data]
+pronuncia_pt = ["abertas.txt"]

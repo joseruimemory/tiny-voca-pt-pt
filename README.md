@@ -1,202 +1,82 @@
-# tiny-voca
+# tiny-voca PT-PT
 
-tiny-voca is a small English text-to-speech model. It has two voices, 4.5M
-parameters, and runs on a CPU or in the browser.
+A small European Portuguese text-to-speech model, built on
+[tiny-voca](https://github.com/n4ze3m/tiny-voca) by Muhammed Nazeem. Two
+invented voices, F3 (female) and M1 (male), 4.5M parameters including the
+waveform generator, 18 MB, 24 kHz. It runs about 150 times faster than real
+time on four CPU threads (Apple M4 Pro).
 
-[Demo](https://tiny-voca.n4ze3m.com) · [Weights](https://huggingface.co/n4ze3m/tiny-voca) · [Dataset](https://huggingface.co/datasets/n4ze3m/tiny-voca)
+[Weights and samples on Hugging Face](https://huggingface.co/joseruimemory/tiny-voca-pt-pt) · [Leia-me em português](LEIA-ME.md)
 
-## Features
+## What is different from tiny-voca
 
-- **Small**: 4,537,291 parameters, 18 MB, waveform generator included.
-- **Fast**: about 70x real time on four CPU threads.
-- **Two voices**: F2 (female) and M2 (male), American English, 24 kHz.
-- **Runs anywhere**: PyTorch, ONNX Runtime, and ONNX Runtime Web.
-- **Open**: code, weights, training recipe and dataset. Trained from scratch.
+- **Portuguese front end.** `pronuncia-pt/` turns European Portuguese text
+  into phonemes with rules and an exception list, without eSpeak or a
+  dictionary: the Lisbon pronunciation, reduced unstressed vowels,
+  /ʃ/ for final *s*, liaison before vowels, numbers read out.
+  It writes the eSpeak NG symbol set, which is also what the multilingual
+  phoneme recogniser used for alignment emits.
+- **Alignment.** Each Portuguese phoneme accepts the recogniser's labels for
+  it, so forced alignment works on Portuguese audio.
+- **Open and closed stressed vowels measured.** The stressed *e* and *o* of
+  514 words were classified as open or closed from their first formant in
+  the training audio (`pt-pt/scripts/medir_vogais.py`), and the front end
+  learned them (version 0.2.0).
 
-## Install
+The model architecture, losses and training code are tiny-voca's, unchanged
+except for the phoneme inventory.
 
-```bash
-git clone https://github.com/n4ze3m/tiny-voca.git
-cd tiny-voca
-pip install -e ".[own]"
-hf download n4ze3m/tiny-voca --local-dir weights
-export DIZIONE_DATA=weights/phonemizer
-```
-
-## Usage
-
-```bash
-python -m tiny_voca.infer \
-  --checkpoint weights/tiny-voca.pt \
-  --voice F2 \
-  --text "Hello! This is tiny voca." \
-  --output hello.wav
-```
-
-| Option | Default | Meaning |
-|---|---|---|
-| `--text-file` | | Read the text from a file instead of `--text` |
-| `--voice` | `F2` | `F2` or `M2` |
-| `--speed` | 1.0 | Speaking rate |
-| `--pitch-shift` | 0 | Raise or lower the pitch |
-| `--pitch-range` | 1.0 | More or less pitch movement |
-
-Long text is fine. It is read one sentence at a time and the audio is joined.
-A text that ends without a mark gets a full stop, so the last word does not
-break off. A sentence with nothing to read, such as one in another script, is
-skipped. The output never peaks above 0.99, so it does not clip as a 16-bit
-WAV. In Python, `tiny_voca.infer.speak_text` does the same.
-
-## ONNX
+## Install and run
 
 ```bash
-python -m tiny_voca.export --checkpoint weights/tiny-voca.pt --output tiny-voca.onnx
+git clone https://github.com/joseruimemory/tiny-voca-pt-pt.git
+cd tiny-voca-pt-pt
+pip install -e . -e ./pronuncia-pt
+hf download joseruimemory/tiny-voca-pt-pt --local-dir weights
+export TINY_VOCA_FRONTEND=pt          # before Python starts: the inventory is fixed at import
+python -m tiny_voca.infer --checkpoint weights/tiny-voca-pt-pt.pt \
+  --voice F3 --text "Bom dia. Hoje vamos ao jardim." --output bom-dia.wav
 ```
 
-A ready file is in the weights repository as `onnx/model.onnx`. The
-[model card](https://huggingface.co/n4ze3m/tiny-voca) shows how to call it.
+Voices: `F3`, `M1`. Options as in tiny-voca: `--speed`, `--pitch-shift`,
+`--pitch-range`, `--text-file`.
 
-## Web demo
+## Data
 
-The [demo](https://tiny-voca.n4ze3m.com) runs the model in the browser. It
-plays each sentence as soon as it is made, and keeps the whole clip in the
-player. Its source is in `web/`.
+| | |
+|---|---|
+| Sentences | 13,582, from Common Voice Portuguese (CC0), filtered to European usage (`pt-pt/scripts/filtrar.py`, from 41,139) |
+| Voices | F3 and M1, designed from text descriptions in Qwen3-TTS VoiceDesign: not the voice of any real person |
+| Speech | Every sentence spoken by both voices with Sopro (`samuel-vitorino/sopro-v2-turbo`), which gives them the Portuguese accent |
+| Size | 27,163 clips, 22.8 h, 24 kHz; split by sentence: 26,643 train, 236 validation, 284 test |
 
-```bash
-cd web
-bash fetch_assets.sh /path/to/dizione
-npx wrangler dev
-```
-
-## Plain JavaScript
-
-An experiment in `js/`: the model and the phonemizer in plain scripts, with no
-libraries. It reads one 8 MB file and runs in the browser, in Node and in Bun.
-
-```bash
-node js/say.mjs "Hello! This is tiny voca." --voice M2 --output hello.wav
-```
-
-See [js/README.md](js/README.md).
+The speech is synthetic. The model learns the accent of the system that made
+the data, and its mistakes.
 
 ## Training
 
-```bash
-export TINY_VOCA_FRONTEND=own
-python -m tiny_voca.prepare --inputs data/train-*.parquet --split train --output features
-python -m tiny_voca.annotate --features features --output annotations
-python -m tiny_voca.train --train annotations/train.jsonl --validation annotations/validation.jsonl \
-  --output runs/NAME --steps 104000 --gan-start 8000 --gan-ratio 0.7 --teacher-final 0
-python -m tiny_voca.evaluate --checkpoint runs/NAME/inference.pt --annotations annotations --output eval/NAME
-```
+On one Mac mini M4 Pro (64 GB), PyTorch MPS, tiny-voca's recipe:
 
-The released weights took 7.7 hours on one RTX 4090. More about the model and
-the data is in [docs/model.md](docs/model.md).
+| Stage | Steps | Time |
+|---|---:|---:|
+| v1, from scratch (adversarial from step 8,000) | 104,000 | 52.6 h |
+| v2, fine-tuned with the corrected vowels | +16,000 | 8.1 h |
+| Total | 120,000 | 60.7 h |
 
-## Tests
+The scripts are in `pt-pt/`: `scripts/gerar.py` (data), `treinar-v1.sh`,
+`afinar-v2.sh`, `continuar-v2.sh`, `config-v1.json`.
 
-```bash
-PYTHONPATH=src:tests python -m unittest discover -s tests
-```
+## Credits and licence
 
-## Limits
+- tiny-voca, by Muhammed Nazeem: the model, training code and recipe
+  (Apache-2.0). Its original README is kept as `README.tiny-voca.md`.
+- Sopro, by Samuel Vitorino (Apache-2.0): the Portuguese speech of the data.
+- Qwen3-TTS VoiceDesign, by the Qwen team (Apache-2.0): the two voices.
+- Common Voice, Mozilla (CC0): the sentences.
+- `facebook/wav2vec2-lv-60-espeak-cv-ft`: phoneme recognition for alignment
+  (training only).
 
-- English only. Two fixed voices. No voice cloning.
-- The F2 voice sounds younger than intended. A more mature voice is planned.
-- Foreign names and odd spellings are often read wrong.
-- No streaming yet.
-
-## Community
-
-Built by other people on top of tiny-voca.
-
-Languages and voices:
-
-- [apptor-tiny-tts](https://huggingface.co/apptor/apptor-tiny-tts): German.
-- [apptor-tiny-tts-at](https://huggingface.co/apptor/apptor-tiny-tts-at): Austrian German, with an accent you can turn up or down and a [browser demo](https://tiny-tts.apptor.at).
-- [tiny-voca-de-en](https://huggingface.co/Fraunhofer-IEM/tiny-voca-de-en): German and English, with up to 32 voices in each.
-- [tiny-voca-it](https://github.com/carbogninalberto/tiny-voca-it): Italian.
-- [vocina](https://github.com/OfficinePixel/vocina): Italian, with a browser demo.
-- [zerre-tts](https://github.com/erkinemreta1/zerre-tts): Turkish.
-- [clarvia-tts-tiny](https://huggingface.co/wite-tech/clarvia-tts-tiny): Turkish, ten voices, with its own [phonemizer](https://huggingface.co/wite-tech/clarvia-phonemizer) for numbers, dates and money.
-- [tiny-voca-uzbek-navoiy](https://huggingface.co/Inomjonov/tiny-voca-uzbek-navoiy): Uzbek, one male voice, trained from scratch on 7.7 hours of Navoiy-generated speech.
-- [korean-tts](https://github.com/ooodev/korean-tts): Korean, and Korean mixed with English.
-- [tiny-voca-ja-tsukuyomi-chan](https://huggingface.co/ayousanz/tiny-voca-ja-tsukuyomi-chan): Japanese, in Tsukuyomi-chan's voice, under that voice's own terms.
-- [tiny-voca-ja](https://github.com/gachimoto-code/tiny-voca-ja): Japanese, two voices, trained on synthetic speech only.
-- [tiny-voca-zh](https://github.com/xiaoliukuailiu/tiny-voca-zh): Mandarin Chinese, two voices, trained on synthetic speech only.
-- [tiny-voca-zh](https://github.com/blue-buff/tiny-voca-zh): Chinese, with male (`M`) and female (`F`) voices and a dedicated Chinese text front end.
-- [slyszeglosy](https://github.com/damaon/slyszeglosy): Polish.
-- [tiny-voca-ru](https://github.com/yilbegan/tiny-voca-ru): Russian, with a [browser demo](https://huggingface.co/spaces/egnch/tiny-voca-ru-demo).
-- [tiny-voca-gr](https://huggingface.co/ComputationalLinguisticsPlatform/tiny-voca-gr): Modern Greek, a male and a female voice.
-- [mini-voz](https://github.com/ElMariones/mini-voz): Spanish, with a Castilian accent.
-- [tiny-voca-es](https://github.com/stdevMac/tiny-voca): Spanish from Spain, with a browser demo.
-- [alpa-es](https://huggingface.co/FranciscoCarlosErra/alpa-es): Rioplatense Spanish.
-- [tiny-voca-fr](https://github.com/DanielSuncost/tiny-voca-fr): French, with a browser demo.
-- [tiny-voca-ptbr](https://github.com/SemFence/tiny-voca-ptbr): Brazilian Portuguese, with its own phonemizer.
-- [tiny-voca-ptbr-kokoro](https://github.com/Haple/tiny-voca-ptbr-kokoro): Brazilian Portuguese, with Kokoro's Brazilian voices as the teacher.
-- [tiny-broca](https://huggingface.co/brenorb/tiny-broca): Brazilian Portuguese, two voices, reads letters with no dictionary, with a [browser demo](https://tiny-broca-demo.pages.dev).
-- [tiny-voca Arabic](https://github.com/BenkadourKhaled/tiny-voca/tree/arabic-halabi-f2): Modern Standard Arabic, trained on a CPU from the Arabic Speech Corpus.
-- [tiny-voca-ar](https://huggingface.co/abdullah/tiny-voca-ar): Modern Standard Arabic, an early version with a [browser demo](https://tiny-voca-ar-site.pages.dev).
-- [tiny-voca-arabic](https://huggingface.co/oddadmix/tiny-voca-arabic): Modern Standard Arabic, trained from scratch, with a [browser demo](https://huggingface.co/spaces/oddadmix/tiny-voca-arabic).
-- [tiny-voca-he](https://github.com/buzagloidan/tiny-voca-he): Hebrew, one male voice, with a browser demo.
-- [pitput](https://huggingface.co/useless-ai/pitput): Hebrew, eight delivery styles and expression tags like laughs and sighs, for research use only.
-- [Browser Voice](https://tts.hansda.in/): Bengali, Gujarati, Hindi, Malayalam and Telugu in native script or Roman letters, with a browser demo and its [code](https://github.com/DarvinX/multilingual-browser-tts).
-- [tiny-swara](https://huggingface.co/Xeven7/tiny-swara): Bengali, two voices, trained from scratch on free Kaggle GPUs.
-- [tiny-voca-hindi](https://huggingface.co/RL10x/tiny-voca-hindi): Hindi, one voice with eight speaking styles, and a C++ engine.
-- [tui-voice-mini-ml](https://huggingface.co/Cyrax321/tui-voice-mini-ml): Malayalam, an early preview.
-- [tiny-voca-sinhala](https://github.com/Emindu/tiny-voca-sinhala): Sinhala, a male and a female voice, trained from scratch on free Kaggle GPUs, with a [browser demo](https://huggingface.co/spaces/eminduperera/tiny-voca-sinhala).
-- [tiny-urdu](https://github.com/Zafar205/tiny-urdu): Roman Urdu, with a browser demo.
-- [Kurdish Behdînî Voice](https://behdinan.com/): Kurdish Behdînî, 21 voices, with a browser demo.
-- [tiny-voca Kiswahili](https://huggingface.co/adoamesh/tiny-voca-swahili): Swahili, runs offline on a low-end Android phone.
-- [SobbieTTS](https://huggingface.co/PatnaikAshish/SobbieTTS): English, an expressive voice.
-- [alpa](https://huggingface.co/77ethers/alpa): Sanskrit, fine-tuned from tiny-voca on a CPU.
-- [fiato](https://huggingface.co/cfahlgren1/fiato): English, with sighs, exhales and gasps.
-
-Ports and apps:
-
-- [llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal/tts.md#tiny-voca): runs tiny-voca with `llama-tts`, from [GGUF files](https://huggingface.co/ggml-org/tiny-voca-GGUF).
-- [voca](https://github.com/sultson/voca): a rewrite in Rust.
-- [tiny-voca-rust](https://github.com/muzapparjan/tiny_voca_rust): another Rust port.
-- [audio.cpp](https://github.com/0xShug0/audio.cpp/blob/main/docs/models/tiny_voca.md): runs tiny-voca in C++ with ggml.
-- [voca-server](https://github.com/Wereling1992/voca-server): a server with an OpenAI-compatible API.
-- [tiny-voca-esp32s3](https://github.com/ngxson/tiny-voca-esp32s3): runs on an ESP32-S3 microcontroller.
-- [tiny-voca-ane](https://github.com/razorback16/tiny-voca-ane): runs on the Apple Neural Engine with Core ML, with a Swift package.
-- [tiny-voca-dashboard](https://github.com/kleenpulse/tiny-voca-dashboard): a local dashboard.
-- [tinyvoca](https://github.com/spurious-cox/tinyvoca): a Mac app.
-- [CopySpeech](https://github.com/ilyaizen/CopySpeech): reads your clipboard aloud, with tiny-voca as the default voice.
-- [tiny-voca GUI](https://github.com/IggyLux/tiny-voca-GUI): a simple local web interface.
-- [TinyVocaTTS](https://github.com/RennexTech/TinyVocaTTS): a one-click Windows interface that can also load the community voices.
-- [Tiny-Voca-Pinokio](https://github.com/PierrunoYT/Tiny-Voca-Pinokio): a one-click launcher for Pinokio.
-
-Same idea, other sounds:
-
-- [tinygroove](https://github.com/totomanov/tinygroove): a drum machine with no samples.
-
-Write-ups:
-
-- [Three small TTS models](https://ai.satyajit.si/articles/tiny-tts-roundup): how tiny-voca works, measured next to Kitten TTS and Tontaube on one CPU.
-- [tiny-voca review](https://andrew.ooo/posts/tiny-voca-review-4-5m-parameter-cpu-text-to-speech/): what it does well, where it breaks and how to run it.
-- [AlphaSignal](https://alphasignal.ai/model/tiny-voca-packs-two-ai-voices-into-an-18-mb-model-for-9): a short summary of the model, the data and the limits.
-
-Made something? Open an issue and I will add it.
-
-## Cost
-
-The whole project cost $9.56 of GPU time on one rented RTX 4090. That is the
-dataset, the failed tries and the final training run.
-
-![Cost breakdown](docs/cost.png)
-
-## Support
-
-It cost less than a pizza to make. If you like it, you can buy me one:
-https://ko-fi.com/n4ze3m
-
-## License
-
-Apache-2.0 for code and weights. CC BY 4.0 for the dataset.
-
-## Citation
+Apache-2.0, as tiny-voca. See `LICENSE` and `NOTICE`.
 
 ```bibtex
 @software{nazeem2026tinyvoca,
@@ -206,3 +86,5 @@ Apache-2.0 for code and weights. CC BY 4.0 for the dataset.
   url    = {https://huggingface.co/n4ze3m/tiny-voca}
 }
 ```
+
+Please do not use the voices to pass as a real person.

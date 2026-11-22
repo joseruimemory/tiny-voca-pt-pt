@@ -39,7 +39,10 @@ def match_frontend(path):
     """Select the front end the checkpoint was trained with."""
     wanted = torch.load(path, map_location="cpu", weights_only=True)["frontend"]["fingerprint"]
     for name in FRONTENDS:
-        set_frontend(name)
+        try:
+            set_frontend(name)   # o inventário português fica fixo no import: os outros recusam-se, e passa-se ao seguinte
+        except ValueError:
+            continue
         try:
             if frontend_fingerprint() == wanted:
                 return name
