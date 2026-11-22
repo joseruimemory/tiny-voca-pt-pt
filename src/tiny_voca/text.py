@@ -41,7 +41,7 @@ import unicodedata
 FRONTEND_VERSION = 3
 ESPEAK_VOICE = "en-us"
 SEPARATOR = "_"
-FRONTENDS = ("espeak", "own")
+FRONTENDS = ("espeak", "own", "pt")
 FRONTEND_VARIABLE = "TINY_VOCA_FRONTEND"
 _frontend = os.environ.get(FRONTEND_VARIABLE, "espeak")
 if _frontend not in FRONTENDS:
@@ -59,6 +59,15 @@ PHONES = CONSONANTS + VOWELS
 # Append-only: changing the order or removing a symbol invalidates checkpoints.
 SYMBOLS = SPECIALS + PUNCTUATION + PHONES
 SYMBOL_TO_ID = {symbol: index for index, symbol in enumerate(SYMBOLS)}
+if _frontend == "pt":
+    # Português europeu (pronuncia-pt): outro inventário, outro modelo. Escolhe-se
+    # pela variável de ambiente, antes de importar, porque os símbolos são constantes.
+    import pronuncia_pt
+    CONSONANTS, VOWELS = pronuncia_pt.CONSOANTES, pronuncia_pt.VOGAIS
+    PHONES = CONSONANTS + VOWELS
+    SYMBOLS = SPECIALS + PUNCTUATION + PHONES
+    SYMBOL_TO_ID = {symbol: index for index, symbol in enumerate(SYMBOLS)}
+    FALLBACK = {}
 PHONE_SET = frozenset(PHONES)
 PHONE_IDS = frozenset(SYMBOL_TO_ID[p] for p in PHONES) | {SYMBOL_TO_ID[UNK]}
 VOICELESS = frozenset(("p", "t", "k", "f", "θ", "s", "ʃ", "h", "tʃ", "ʔ"))
@@ -110,6 +119,8 @@ def set_frontend(name):
     global _frontend
     if name not in FRONTENDS:
         raise ValueError(f"front end must be one of {FRONTENDS}, not {name!r}")
+    if (name == "pt") != (_frontend == "pt"):
+        raise ValueError(f"the Portuguese inventory is fixed at import: set {FRONTEND_VARIABLE}=pt before importing")
     _frontend = name
 
 
@@ -124,6 +135,9 @@ def _dizione():
 
 
 def frontend_identity():
+    if _frontend == "pt":
+        import pronuncia_pt
+        return {"frontend_version": pronuncia_pt.VERSAO, "phonemizer": "pronuncia-pt", "symbols": list(SYMBOLS)}
     if _frontend == "own":
         phonemizer = _dizione()
         return {"frontend_version": phonemizer.VERSION, "phonemizer": "dizione", "symbols": list(SYMBOLS)}
@@ -134,6 +148,9 @@ def frontend_identity():
 def frontend_runtime():
     """What an annotation run records about the exact program behind its
     tokens: the eSpeak version, or the fingerprint of the phonemizer build."""
+    if _frontend == "pt":
+        import pronuncia_pt
+        return {"phonemizer": "pronuncia-pt " + pronuncia_pt.VERSAO}
     if _frontend == "own":
         return {"phonemizer": _dizione().identity()["fingerprint"]}
     return {"espeak_version": espeak_version()}
@@ -269,6 +286,9 @@ def tokenize(pieces):
 def phonemize(text):
     if not isinstance(text, str) or not text.strip():
         raise ValueError("text must not be empty")
+    if _frontend == "pt":
+        import pronuncia_pt
+        return tokenize(pronuncia_pt.pecas(text))
     if _frontend == "own":
         return tokenize(_dizione().pieces(text))
     pieces = []

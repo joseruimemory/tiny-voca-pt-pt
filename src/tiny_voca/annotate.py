@@ -33,7 +33,7 @@ from .text import (PHONE_SET, SYMBOL_TO_ID, UNK, VOICELESS, VOWEL_SET, Phonemize
                    frontend_identity, frontend_runtime, phonemize)
 
 SPLITS = ("train", "validation", "test")
-FRICATIVES = frozenset(("f", "θ", "s", "ʃ"))
+FRICATIVES = frozenset(("f", "θ", "s", "ʃ")) | (frozenset(("z", "ʒ", "v")) if __import__("os").environ.get("TINY_VOCA_FRONTEND") == "pt" else frozenset())
 
 
 def load_acoustic_rows(features, split, config):

@@ -5,6 +5,7 @@ import re
 import torch
 from .config import CHECKPOINT_FORMAT, Config
 from .model import TinyVoca, UtteranceTooLong
+from .config import Config
 from .text import FRONTEND_VARIABLE, FRONTENDS, NothingToPronounce, frontend_fingerprint, phonemize, set_frontend
 
 # The loudest sample of the audio that ``speak_text`` and the command return.
@@ -174,7 +175,7 @@ def main():
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--text", help="Text of any length; it is read sentence by sentence")
     source.add_argument("--text-file", type=Path, help="Read the text from a file (UTF-8)")
-    parser.add_argument("--voice", choices=("F2", "M2"), default="F2")
+    parser.add_argument("--voice", choices=Config().speakers, default=Config().speakers[0])
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--speed", type=float, default=1)
     parser.add_argument("--pitch-shift", type=float, default=0, help="Added to log F0 (0.058 is about one semitone)")

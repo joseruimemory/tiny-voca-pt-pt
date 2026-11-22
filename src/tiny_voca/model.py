@@ -123,6 +123,10 @@ def pulse_train(f0, sample_rate, hop, limit=0.47, phase=None):
     sin((K+1/2)x) / (2 sin(x/2)) - 1/2; the top harmonic fades in and out so the
     signal stays continuous while the pitch glides. Float64 keeps the phase exact.
     """
+    if f0.device.type == "mps":
+        # A placa da Apple não tem float64 (18 Nov 2026): a fase faz-se no processador,
+        # exacta como no original, e o resultado volta à placa.
+        return pulse_train(f0.cpu(), sample_rate, hop, limit, None if phase is None else phase.cpu()).to(f0.device)
     frames = f0.shape[1]
     knots = torch.log(f0.double().clamp_min(1.0))
     knots = torch.cat((knots, knots[:, -1:]), dim=1)

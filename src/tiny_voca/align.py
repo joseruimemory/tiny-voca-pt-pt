@@ -270,6 +270,11 @@ class PhoneRecognizer:
             raise ValueError(f"recogniser has no label for inventory phones {missing}")
 
     def label(self, symbol):
+        # Português (18 Nov 2026): o reconhecedor, treinado sobretudo com vozes do Brasil, não
+        # emite ɨ nem ɾ; para alinhar, procura-se o som mais próximo que ele emite. Os tokens do
+        # modelo não mudam.
+        if __import__("os").environ.get("TINY_VOCA_FRONTEND") == "pt":
+            symbol = {"ɨ": "e", "ɾ": "r"}.get(symbol, symbol)
         symbol = symbol if symbol in self.vocabulary else ALIGNER_LABEL_FALLBACK[symbol]
         return int(self.vocabulary[symbol])
 
