@@ -135,6 +135,7 @@ Languages and voices:
 - [tiny-voca-ptbr](https://github.com/SemFence/tiny-voca-ptbr): Brazilian Portuguese, with its own phonemizer.
 - [tiny-voca-ptbr-kokoro](https://github.com/Haple/tiny-voca-ptbr-kokoro): Brazilian Portuguese, with Kokoro's Brazilian voices as the teacher.
 - [tiny-broca](https://huggingface.co/brenorb/tiny-broca): Brazilian Portuguese, two voices, reads letters with no dictionary, with a [browser demo](https://tiny-broca-demo.pages.dev).
+- [tiny-voca PT-PT](https://huggingface.co/joserui/tiny-voca-pt-pt): European Portuguese, two voices, trained from scratch on 22.8 hours of synthetic speech, with a rule-based phonemizer and a [browser demo](https://joseruimemory.github.io/tiny-voca-pt-pt/).
 - [tiny-voca Arabic](https://github.com/BenkadourKhaled/tiny-voca/tree/arabic-halabi-f2): Modern Standard Arabic, trained on a CPU from the Arabic Speech Corpus.
 - [tiny-voca-ar](https://huggingface.co/abdullah/tiny-voca-ar): Modern Standard Arabic, an early version with a [browser demo](https://tiny-voca-ar-site.pages.dev).
 - [tiny-voca-arabic](https://huggingface.co/oddadmix/tiny-voca-arabic): Modern Standard Arabic, trained from scratch, with a [browser demo](https://huggingface.co/spaces/oddadmix/tiny-voca-arabic).
