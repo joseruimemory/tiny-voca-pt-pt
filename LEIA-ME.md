@@ -62,7 +62,7 @@ Não usem as vozes para se fazerem passar por uma pessoa real.
 ## No navegador
 
 [`docs/`](docs/) é a página de demonstração, servida pelo GitHub Pages: o modelo
-em ONNX (`docs/assets/model.onnx`, corrido pelo ONNX Runtime Web) e o
+em ONNX (`onnx/model.onnx` no Hugging Face, corrido pelo ONNX Runtime Web) e o
 pronuncia-pt reescrito em JavaScript (`docs/pronuncia.js`). O JavaScript dá
 exactamente os fonemas e as fichas do pacote Python: `docs/test/vectores.py`
 escreve os vectores de teste com o Python e `node docs/test/conferir.mjs`

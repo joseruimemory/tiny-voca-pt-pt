@@ -92,7 +92,7 @@ Please do not use the voices to pass as a real person.
 ## In the browser
 
 [`docs/`](docs/) is the demo page, served by GitHub Pages: the model as ONNX
-(`docs/assets/model.onnx`, run by ONNX Runtime Web) and pronuncia-pt rewritten in
+(`onnx/model.onnx` on Hugging Face, run by ONNX Runtime Web) and pronuncia-pt rewritten in
 JavaScript (`docs/pronuncia.js`). The JavaScript gives exactly the phonemes and
 model tokens of the Python package: `docs/test/vectores.py` writes test vectors
 with Python and `node docs/test/conferir.mjs` checks them (all 13,582 training

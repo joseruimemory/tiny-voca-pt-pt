@@ -11,6 +11,7 @@ const status = (text, progress) => postMessage({ type: "status", text, progress 
 
 // Muda quando os ficheiros de assets/ mudarem, para o navegador os ir buscar de novo.
 const VERSION = "1";
+const MODELO = "https://huggingface.co/joserui/tiny-voca-pt-pt/resolve/main/onnx/model.onnx";
 
 // O que se descarrega fica na cache do navegador: a segunda visita começa sem rede.
 async function download(url, label) {
@@ -48,7 +49,9 @@ async function load() {
   // os símbolos do modelo têm de ser, pela mesma ordem, os da pronúncia: senão as fichas não querem dizer nada
   if (JSON.stringify(config.symbols) !== JSON.stringify(PronunciaPT.SIMBOLOS)) throw new Error("the phonemizer and the model disagree on the symbols");
   PronunciaPT.definirAbertas(await (await fetch("assets/abertas.txt?v=" + VERSION)).text());
-  const bytes = await download("assets/model.onnx", "Loading the model");
+  // o modelo vem do Hugging Face (21 MB): o .gitignore do original deixa os .onnx fora do git, e assim o repositório
+  // não carrega com ele
+  const bytes = await download(MODELO, "Loading the model");
   status("Starting the model");
   ort.env.wasm.wasmPaths = ORT;
   ort.env.wasm.numThreads = 1;
