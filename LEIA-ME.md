@@ -6,7 +6,7 @@ inventadas, F3 (feminina) e M1 (masculina), 4,5 milhões de parâmetros com o
 gerador de onda incluído, 18 MB, 24 kHz. Fala cerca de 150 vezes mais depressa
 do que o tempo real em quatro núcleos de CPU (Apple M4 Pro).
 
-[Pesos e amostras no Hugging Face](https://huggingface.co/joseruimemory/tiny-voca-pt-pt) · [README in English](README.md)
+[Pesos e amostras no Hugging Face](https://huggingface.co/joserui/tiny-voca-pt-pt) · [README in English](README.md)
 
 ## O que muda em relação ao tiny-voca
 
@@ -30,7 +30,7 @@ alterações além do inventário de fonemas.
 git clone https://github.com/joseruimemory/tiny-voca-pt-pt.git
 cd tiny-voca-pt-pt
 pip install -e . -e ./pronuncia-pt
-hf download joseruimemory/tiny-voca-pt-pt --local-dir weights
+hf download joserui/tiny-voca-pt-pt --local-dir weights
 export TINY_VOCA_FRONTEND=pt          # antes de o Python arrancar
 python -m tiny_voca.infer --checkpoint weights/tiny-voca-pt-pt.pt \
   --voice F3 --text "Bom dia. Hoje vamos ao jardim." --output bom-dia.wav

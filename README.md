@@ -6,7 +6,7 @@ invented voices, F3 (female) and M1 (male), 4.5M parameters including the
 waveform generator, 18 MB, 24 kHz. It runs about 150 times faster than real
 time on four CPU threads (Apple M4 Pro).
 
-[Weights and samples on Hugging Face](https://huggingface.co/joseruimemory/tiny-voca-pt-pt) · [Leia-me em português](LEIA-ME.md)
+[Weights and samples on Hugging Face](https://huggingface.co/joserui/tiny-voca-pt-pt) · [Leia-me em português](LEIA-ME.md)
 
 ## What is different from tiny-voca
 
@@ -32,7 +32,7 @@ except for the phoneme inventory.
 git clone https://github.com/joseruimemory/tiny-voca-pt-pt.git
 cd tiny-voca-pt-pt
 pip install -e . -e ./pronuncia-pt
-hf download joseruimemory/tiny-voca-pt-pt --local-dir weights
+hf download joserui/tiny-voca-pt-pt --local-dir weights
 export TINY_VOCA_FRONTEND=pt          # before Python starts: the inventory is fixed at import
 python -m tiny_voca.infer --checkpoint weights/tiny-voca-pt-pt.pt \
   --voice F3 --text "Bom dia. Hoje vamos ao jardim." --output bom-dia.wav
