@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tiny-voca PT-PT</title>
+<meta name="description" content="tiny-voca PT-PT is a 4.5M-parameter European Portuguese text-to-speech model. This page runs it in your browser.">
+<meta property="og:title" content="tiny-voca PT-PT">
+<meta property="og:description" content="European Portuguese text-to-speech, 4.5M parameters, running in your browser.">
+<meta property="og:image" content="https://joseruimemory.github.io/tiny-voca-pt-pt/assets/cartao.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231a1a1a'/%3E%3Cpath d='M8 13v6M12 9v14M16 12v8M20 7v18M24 13v6' stroke='%2379c7ba' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  /* O sistema das imagens dos projectos (MyBrightShadow-oficina/imagens/tokens.css): papel, tinta e uma cor; o nome
+     em XBlack e o resto leve. A Neue Haas Unica Pro só se usa se estiver instalada em quem lê (local()): é uma
+     licença de computador e não vai embebida numa página pública; sem ela, a Helvetica Neue. */
+  @font-face { font-family: "Unica"; font-weight: 300; src: local("NeueHaasUnicaPro-Light"), local("Neue Haas Unica Pro Light"), local("HelveticaNeue-Light"); }
+  @font-face { font-family: "Unica"; font-weight: 400; src: local("NeueHaasUnicaPro-Regular"), local("Neue Haas Unica Pro"), local("HelveticaNeue"); }
+  @font-face { font-family: "Unica"; font-weight: 500; src: local("NeueHaasUnicaPro-Medium"), local("Neue Haas Unica Pro Medium"), local("HelveticaNeue-Medium"); }
+  @font-face { font-family: "Unica"; font-weight: 900; src: local("NeueHaasUnicaPro-XBlack"), local("Neue Haas Unica Pro XBlack"), local("HelveticaNeue-Bold"); }
+  :root {
+    --papel: #faf8f6; --tinta: #1a1a1a; --cinza: #999490; --texto: #555350; --filete: #e8e4e0; --branco: #fff;
+    --cor: #79c7ba; --cor-escura: #5f9a8b;
+    --letra: "Unica", "Neue Haas Unica Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --q: 56px;   /* o quadrado da grelha */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --papel: #161615; --tinta: #f1eee9; --cinza: #8d8984; --texto: #c4c0ba; --filete: #2e2d2b; --branco: #1f1e1d; --cor-escura: #79c7ba; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--papel); color: var(--tinta); font: 300 17px/1.5 var(--letra); }
+  main { max-width: calc(var(--q) * 14); margin: 0 auto; padding: var(--q) 20px calc(var(--q) * 1.5); }
+  .marca { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; color: var(--cinza); }
+  .marca b { font-weight: 500; color: var(--tinta); }
+  h1 { font-weight: 900; font-size: clamp(48px, 10vw, 92px); line-height: .92; letter-spacing: -.035em; margin: calc(var(--q) * .6) 0 0; }
+  h1 i { font-style: normal; color: var(--cor-escura); }
+  .diz { font-size: clamp(19px, 2.6vw, 24px); line-height: 1.3; color: var(--texto); margin: 18px 0 0; max-width: 30em; }
+  .painel { margin-top: var(--q); background: var(--branco); border: 1px solid var(--filete); border-radius: 14px; padding: 18px; }
+  textarea { width: 100%; min-height: 140px; resize: vertical; border: 0; outline: 0; background: transparent; color: inherit;
+             font: 300 21px/1.45 var(--letra); padding: 4px; }
+  .exemplos { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 2px; }
+  .exemplos button { font: 400 13px var(--letra); color: var(--texto); background: transparent; border: 1px solid var(--filete);
+                     border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+  .exemplos button:hover { color: var(--tinta); border-color: var(--cinza); }
+  .comandos { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; border-top: 1px solid var(--filete); margin-top: 14px; padding-top: 14px; }
+  .vozes { display: inline-flex; border: 1px solid var(--filete); border-radius: 9px; overflow: hidden; }
+  .vozes label { padding: 7px 14px; font-size: 14px; cursor: pointer; color: var(--cinza); }
+  .vozes input { position: absolute; opacity: 0; pointer-events: none; }
+  .vozes input:checked + span { color: var(--tinta); font-weight: 500; }
+  .vozes label:has(input:checked) { background: var(--papel); }
+  .vozes label:has(input:focus-visible) { outline: 2px solid var(--cor-escura); outline-offset: -2px; }
+  .velocidade { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--cinza); }
+  .velocidade input { width: 130px; accent-color: var(--cor-escura); }
+  .velocidade output { font: 13px var(--mono); color: var(--tinta); min-width: 4ch; }
+  #speak { margin-left: auto; min-width: 6.5em; font: 500 16px var(--letra); color: #fff; background: var(--tinta); border: 0;
+           border-radius: 10px; padding: 12px 24px; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { #speak { color: #161615; } }
+  #speak:disabled { opacity: .4; cursor: default; }
+  #speak:focus-visible, textarea:focus-visible, .exemplos button:focus-visible { outline: 2px solid var(--cor-escura); outline-offset: 2px; }
+  .estado { margin-top: 16px; font-size: 14px; color: var(--cinza); min-height: 22px; }
+  .barra { height: 2px; background: var(--filete); margin-top: 8px; overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 0; background: var(--cor); transition: width .15s; }
+  .barra[hidden], .resultado[hidden] { display: none; }
+  .resultado { margin-top: 22px; }
+  audio { width: 100%; }
+  .resultado dl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0 0; }
+  .resultado dl div { border-top: 1px solid var(--filete); padding-top: 8px; }
+  dt { font-size: 12px; color: var(--cinza); }
+  dd { margin: 2px 0 0; font: 15px var(--mono); }
+  details { margin-top: 16px; font-size: 14px; color: var(--cinza); }
+  details pre { white-space: pre-wrap; word-break: break-word; font: 14px/1.6 var(--mono); color: var(--tinta); margin: 8px 0 0; }
+  .numeros { margin-top: calc(var(--q) * 1.2); display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 20px; }
+  .numeros div { border-top: 1px solid var(--tinta); padding: 12px 0 22px; }
+  .numeros b { display: block; font-weight: 300; font-size: clamp(34px, 5vw, 52px); line-height: 1; letter-spacing: -.03em; font-feature-settings: "tnum"; }
+  .numeros span { display: block; margin-top: 8px; font-size: 13px; line-height: 1.35; color: var(--cinza); }
+  footer { margin-top: calc(var(--q) * .6); font-size: 14px; color: var(--cinza); }
+  footer nav a { color: var(--tinta); text-underline-offset: 3px; margin-right: 18px; }
+  footer p { margin: 14px 0 0; max-width: 64ch; line-height: 1.55; }
+  footer p a { color: inherit; }
+  @media (max-width: 640px) {
+    main { padding-top: 32px; } .marca span { display: none; }
+    .resultado dl, .numeros { grid-template-columns: repeat(2, 1fr); }
+    #speak { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="marca"><b>Text-to-speech · open weights</b><span>Built on tiny-voca by Muhammed Nazeem</span></div>
+  <h1>tiny-voca <i>PT-PT</i></h1>
+  <p class="diz">European Portuguese text-to-speech with two voices, small enough to run on any CPU. This page runs it
+     in your browser: nothing you type leaves your device.</p>
+
+  <section class="painel">
+    <textarea id="text" spellcheck="false" lang="pt-PT" aria-label="Text to speak">Bom dia. Hoje vamos ao jardim ver as roseiras e podar as macieiras, antes que chegue o Inverno.</textarea>
+    <div class="exemplos" id="examples"></div>
+    <div class="comandos">
+      <div class="vozes" role="radiogroup" aria-label="Voice">
+        <label><input type="radio" name="voice" value="0" checked><span>F3</span></label>
+        <label><input type="radio" name="voice" value="1"><span>M1</span></label>
+      </div>
+      <label class="velocidade">Speed <input id="speed" type="range" min="0.7" max="1.4" step="0.05" value="1"><output id="speed-value">1.00</output></label>
+      <button id="speak" disabled>Speak</button>
+    </div>
+  </section>
+  <div class="estado" id="status" role="status">Loading…</div>
+  <div class="barra" id="bar"><i></i></div>
+  <section class="resultado" id="result" hidden>
+    <audio id="audio" controls></audio>
+    <dl>
+      <div><dt>Audio</dt><dd id="m-audio">–</dd></div>
+      <div><dt>Time to generate</dt><dd id="m-time">–</dd></div>
+      <div><dt>Speed</dt><dd id="m-speed">–</dd></div>
+      <div><dt>Text to phonemes</dt><dd id="m-phonemes">–</dd></div>
+    </dl>
+    <p><a id="save" download="tiny-voca-pt-pt.wav" href="#">Download the WAV</a></p>
+    <details><summary>Phonemes</summary><pre id="phonemes"></pre></details>
+  </section>
+
+  <section class="numeros">
+    <div><b>4.5M</b><span>parameters, waveform generator included; 21 MB (ONNX)</span></div>
+    <div><b>22.8 h</b><span>of synthetic speech, 27,163 clips</span></div>
+    <div><b>60.7 h</b><span>of training on a Mac mini M4 Pro, 64 GB</span></div>
+    <div><b>24 kHz</b><span>mono; voices F3 and M1, invented</span></div>
+  </section>
+  <footer>
+    <nav>
+      <a href="https://github.com/joseruimemory/tiny-voca-pt-pt">Code</a>
+      <a href="https://huggingface.co/joserui/tiny-voca-pt-pt">Weights</a>
+      <a href="https://huggingface.co/datasets/joserui/tiny-voca-pt-pt-data">Dataset</a>
+      <a href="https://github.com/n4ze3m/tiny-voca">tiny-voca</a>
+    </nav>
+    <p>The architecture and the training recipe are <a href="https://github.com/n4ze3m/tiny-voca">tiny-voca</a>'s, by
+       Muhammed Nazeem; this model was trained from scratch on European Portuguese. The voices were designed in
+       Qwen3-TTS and spoken by Sopro; the sentences come from Common Voice. Pronunciation comes from rules
+       (pronuncia-pt), so foreign names and abbreviations can come out wrong. The first visit downloads about 21 MB.
+       Apache-2.0. Please do not use it to pass as a real person.</p>
+  </footer>
+</main>
+<script src="player.js"></script>
+<script>
+const EXAMPLES = [
+  ["Jardim", "Bom dia. Hoje vamos ao jardim ver as roseiras e podar as macieiras, antes que chegue o Inverno."],
+  ["Números", "O comboio das 10h30 custa 12,50 €, e chega a Coimbra às 13h05, com 15 % de desconto."],
+  ["Pergunta", "Já leste o livro que te emprestei? Diz-me o que achaste, que eu gostei muito!"],
+  ["Horta", "A horticultura é tão necessária, que sem ela não teria vida a agricultura: ambas se ligam mutuamente."],
+  ["Conversa", "Olha, não te esqueças de regar as couves e os tomates logo à tarde, está bem?"],
+];
+const $ = (id) => document.getElementById(id);
+const worker = new Worker("worker.js");
+let ready = false, busy = false, request = 0, url = null, rate = 0, live = null;
+for (const [label, text] of EXAMPLES) {
+  const button = document.createElement("button");
+  button.textContent = label;
+  button.onclick = () => { $("text").value = text; $("text").focus(); update(); };
+  $("examples").append(button);
+}
+$("speed").oninput = () => { $("speed-value").textContent = Number($("speed").value).toFixed(2); };
+function setStatus(text, progress) {
+  $("status").textContent = text;
+  $("bar").hidden = progress == null;
+  if (progress != null) $("bar").firstElementChild.style.width = Math.round(progress * 100) + "%";
+}
+function update() {
+  const playing = live !== null && live.playing;
+  $("speak").textContent = playing ? "Stop" : "Speak";
+  $("speak").disabled = !playing && (!ready || busy || !$("text").value.trim());
+}
+$("text").oninput = update;
+
+function wav(samples, rate) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const text = (offset, value) => { for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i)); };
+  text(0, "RIFF"); view.setUint32(4, 36 + samples.length * 2, true); text(8, "WAVEfmt ");
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  text(36, "data"); view.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 32767, true);
+  return new Blob([buffer], { type: "audio/wav" });
+}
+
+let phonemes = [];
+worker.onmessage = ({ data }) => {
+  if (data.type === "status") setStatus(data.text, data.progress);
+  else if (data.type === "ready") { ready = true; rate = data.sampleRate; setStatus("Ready."); update(); }
+  else if (data.type === "sentence" && data.id === request) {
+    phonemes.push(data.phonemes);
+    if (live && data.audio) live.add(data.audio, data.sampleRate);
+    setStatus(`Speaking sentence ${data.index + 1} of ${data.total}`, (data.index + 1) / data.total);
+  } else if (data.type === "done" && data.id === request) {
+    busy = false; update();
+    const seconds = data.audio.length / data.sampleRate;
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(wav(data.audio, data.sampleRate));
+    $("audio").src = url; $("save").href = url;
+    if (!live || !live.end()) $("audio").play().catch(() => {});
+    $("m-audio").textContent = seconds.toFixed(1) + " s";
+    $("m-time").textContent = (data.totalTime / 1000).toFixed(2) + " s";
+    $("m-speed").textContent = (seconds / (data.totalTime / 1000)).toFixed(1) + "× real time";
+    $("m-phonemes").textContent = Math.round(data.phonemeTime) + " ms";
+    $("phonemes").textContent = [...new Set(phonemes)].join("\n");
+    $("result").hidden = false;
+    if (AUTO) {   // para os testes sem janela: a duração, o volume e o pico do que saiu
+      let soma = 0, pico = 0;
+      for (const x of data.audio) { soma += x * x; pico = Math.max(pico, Math.abs(x)); }
+      Object.assign(document.body.dataset, { done: seconds.toFixed(2), rms: Math.sqrt(soma / data.audio.length).toFixed(4), pico: pico.toFixed(3) });
+    }
+    setStatus("Done.");
+  } else if (data.type === "error") {
+    busy = false;
+    if (live) live.end();
+    update();
+    setStatus(data.plain ? data.message : "Something went wrong: " + data.message);
+  }
+};
+worker.onerror = (event) => setStatus("Could not start: " + event.message);
+
+// O som só pode começar dentro de um clique: o leitor faz-se aqui, não quando chega a primeira frase.
+function listen() {
+  const Context = window.AudioContext || window.webkitAudioContext;
+  if (!live && Context) {
+    let context = null;
+    try { context = new Context({ sampleRate: rate }); } catch (error) { try { context = new Context(); } catch (failed) {} }
+    if (context) live = livePlayer(context, update);
+  }
+  $("audio").pause();
+  if (live) live.begin();
+}
+$("audio").onplay = () => { if (live) live.stop(); };
+
+function speak() {
+  busy = true; phonemes = [];
+  request += 1;
+  update();
+  setStatus("Speaking…", 0);
+  worker.postMessage({ type: "speak", id: request, text: $("text").value,
+                       voice: Number(document.querySelector("input[name=voice]:checked").value), speed: Number($("speed").value) });
+}
+$("speak").onclick = () => {
+  if (live && live.playing) { live.stop(); return; }
+  listen();
+  speak();
+};
+$("text").addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && !$("speak").disabled) $("speak").click();
+});
+
+// ?falar: fala logo que o modelo esteja pronto, sem clique (para os testes sem janela; o som não sai, o WAV sim)
+const AUTO = new URLSearchParams(location.search).has("falar");
+worker.addEventListener("message", ({ data }) => { if (AUTO && data.type === "ready") speak(); });
+setStatus("Loading the model…");
+worker.postMessage({ type: "load" });
+</script>
+</body>
+</html>

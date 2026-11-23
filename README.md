@@ -6,7 +6,7 @@ invented voices, F3 (female) and M1 (male), 4.5M parameters including the
 waveform generator, 18 MB, 24 kHz. It runs about 150 times faster than real
 time on four CPU threads (Apple M4 Pro).
 
-[Weights and samples on Hugging Face](https://huggingface.co/joserui/tiny-voca-pt-pt) · [Leia-me em português](LEIA-ME.md)
+[Try it in your browser](https://joseruimemory.github.io/tiny-voca-pt-pt/) · [Weights and samples on Hugging Face](https://huggingface.co/joserui/tiny-voca-pt-pt) · [Leia-me em português](LEIA-ME.md)
 
 ## What is different from tiny-voca
 
@@ -88,3 +88,12 @@ Apache-2.0, as tiny-voca. See `LICENSE` and `NOTICE`.
 ```
 
 Please do not use the voices to pass as a real person.
+
+## In the browser
+
+[`docs/`](docs/) is the demo page, served by GitHub Pages: the model as ONNX
+(`docs/assets/model.onnx`, run by ONNX Runtime Web) and pronuncia-pt rewritten in
+JavaScript (`docs/pronuncia.js`). The JavaScript gives exactly the phonemes and
+model tokens of the Python package: `docs/test/vectores.py` writes test vectors
+with Python and `node docs/test/conferir.mjs` checks them (all 13,582 training
+sentences and 32 hard cases agree).

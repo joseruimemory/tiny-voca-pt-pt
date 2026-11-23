@@ -6,7 +6,7 @@ inventadas, F3 (feminina) e M1 (masculina), 4,5 milhões de parâmetros com o
 gerador de onda incluído, 18 MB, 24 kHz. Fala cerca de 150 vezes mais depressa
 do que o tempo real em quatro núcleos de CPU (Apple M4 Pro).
 
-[Pesos e amostras no Hugging Face](https://huggingface.co/joserui/tiny-voca-pt-pt) · [README in English](README.md)
+[Experimentar no navegador](https://joseruimemory.github.io/tiny-voca-pt-pt/) · [Pesos e amostras no Hugging Face](https://huggingface.co/joserui/tiny-voca-pt-pt) · [README in English](README.md)
 
 ## O que muda em relação ao tiny-voca
 
@@ -58,3 +58,12 @@ Voice, da Mozilla (CC0); o `facebook/wav2vec2-lv-60-espeak-cv-ft`, no
 alinhamento. Licença Apache-2.0, como o original: ver `LICENSE` e `NOTICE`.
 
 Não usem as vozes para se fazerem passar por uma pessoa real.
+
+## No navegador
+
+[`docs/`](docs/) é a página de demonstração, servida pelo GitHub Pages: o modelo
+em ONNX (`docs/assets/model.onnx`, corrido pelo ONNX Runtime Web) e o
+pronuncia-pt reescrito em JavaScript (`docs/pronuncia.js`). O JavaScript dá
+exactamente os fonemas e as fichas do pacote Python: `docs/test/vectores.py`
+escreve os vectores de teste com o Python e `node docs/test/conferir.mjs`
+confere-os (as 13 582 frases do treino e 32 casos difíceis batem certo).
